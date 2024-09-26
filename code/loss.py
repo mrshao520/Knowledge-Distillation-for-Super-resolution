@@ -17,30 +17,32 @@ class Loss(nn.modules.loss._Loss):
     def __init__(self, args, ckp):
         super(Loss, self).__init__()
         print('Preparing loss function:')
-
+        # 初始化参数
         self.n_GPUs = args.n_GPUs
         self.loss = []
         self.feature_loss_module = nn.ModuleList()
         self.feature_loss_used = args.feature_loss_used
         
-        # SR loss
+        print(f"loss alpha : {args.alpha}")
+        # SR loss 设置不同损失权重
         DS_weight = 1 - args.alpha
         TS_weight = args.alpha
-
+        # 添加真实图像损失
         self.loss.append({'type': "DS", 'weight': DS_weight, 'function': nn.L1Loss()})
+        # 添加教师图像损失
         self.loss.append({'type': "TS", 'weight': TS_weight, 'function': nn.L1Loss()})
-          
+        
 
-
-        # feature loss
+        # feature loss 特征损失
         if args.feature_loss_used == 1:      
             for loss in args.feature_distilation_type.split('+'):
                 weight, feature_type = loss.split('*')
+                # FeatureLoss 为 L1Loss
                 l = {'type': feature_type, 'weight': float(weight), 'function': FeatureLoss(loss=nn.L1Loss())}
                 self.loss.append(l)
                 self.feature_loss_module.append(l['function'])
        
-      
+        # 添加总损失，初始权重为 0
         self.loss.append({'type': 'Total', 'weight': 0, 'function': None})
 
         

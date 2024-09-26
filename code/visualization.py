@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import data
 from option import args
-import edsr, ddbpn, rdn, rcan
+from models import edsr, rdn, rcan
 from loss import *
 import utility
 import math
@@ -73,7 +73,7 @@ def visu(layer_activation, name):
 '''    
 
 teacher = rcan.RCAN(args)
-load_from = torch.load('../teacher_checkpoint/RCAN_BIX8.pt')
+load_from = torch.load('./teacher_checkpoint/RCAN_BIX8.pt')
 teacher.load_state_dict(load_from)
 
 args.n_resblocks = 6
@@ -85,8 +85,8 @@ student_with_kd = rcan.RCAN(args)
 
 print('network has been loaded successfully')
 
-addr = ['../experiment_result/student_baseline/rcan_baseline/baseline_x8/model/model_best.pt',
-        '../experiment_result/overall_distilation/rcan/SA_x8/model/model_best.pt']
+addr = ['./experiment_result/student_baseline/rcan_baseline/baseline_x8/model/model_best.pt',
+        './experiment_result/overall_distilation/rcan/SA_x8/model/model_best.pt']
 
 name = ['baseline', 'SA']
 

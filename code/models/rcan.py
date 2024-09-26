@@ -128,13 +128,18 @@ class RCAN(nn.Module):
                 
     def load_state_dict_teacher(self, state_dict):
         own_state = self.state_dict()
+        # print(state_dict.keys())
         for name, param in state_dict.items():
             old_name = name
             if 'body' in name:
+                # print(name)
                 a = name.split('.')
-                if int(a[1]) == 10:
-                    a[0] = 'body_tail'
-                else:
+                try:
+                    if int(a[1]) == 10:
+                        a[0] = 'body_tail'
+                    else:
+                        a[0] = 'body_group' + a[1]
+                except:
                     a[0] = 'body_group' + a[1]
                 a.pop(1)
                 name = '.'.join(a)
@@ -144,7 +149,8 @@ class RCAN(nn.Module):
                     param = param.data
                 own_state[name].copy_(param)
             else:
-                print(name, old_name)
+                # print(name, old_name)
+                pass
 
                 
     def load_state_dict_student(self, state_dict):

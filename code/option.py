@@ -4,16 +4,16 @@ import template
 parser = argparse.ArgumentParser(description='Knowledge distillation for super-resolutioin')
 
 # GPU setting
-parser.add_argument('--cpu', action='store_true', help='use cpu only')
+parser.add_argument('--cpu', action='store_true', default=True, help='use cpu only')
 parser.add_argument('--n_GPUs', type=int, default=1, help='number of GPUs')
 parser.add_argument('--gpu_id', type=int, default=0, help='GPU id')
 parser.add_argument('--n_threads', type=int, default=6, help='number of threads for data loading')
 
 
 # Dataset Setting
-parser.add_argument('--dir_data', type=str, default='/data/lvyalei/dataset/', help='dataset directory')
+parser.add_argument('--dir_data', type=str, default='./datasets/', help='dataset directory')
 parser.add_argument('--data_train', type=str, default='DIV2K', help='train dataset name')
-parser.add_argument('--data_test', type=str, default='Set5+Set14+B100+Urban100', help='test dataset name')
+parser.add_argument('--data_test', type=str, default='Set5', help='test dataset name')
 parser.add_argument('--data_range', type=str, default='1-800/801-810', help='train/test data range')
 parser.add_argument('--scale', type=str, default='4', help='super resolution scale')
 parser.add_argument('--ext', type=str, default='sep', help='dataset file extension')
@@ -36,7 +36,7 @@ parser.add_argument('--save_results', action='store_true', help='save output res
 
 # training setting
 parser.add_argument('--epochs', type=int, default=700, help='number of epochs to train')
-parser.add_argument('--batch_size', type=int, default=16, help='input batch size for training')
+parser.add_argument('--batch_size', type=int, default=1, help='input batch size for training')
 parser.add_argument('--resume', type=int, default=0, help='whether resume from the lastest version')
 parser.add_argument('--test_only', action='store_true', help='set this option to test the model')
 parser.add_argument('--precision', type=str, default='single', choices=('single', 'half'), help='FP precision for test (single | half)')

@@ -16,11 +16,11 @@ from feature_transformation import pooled_spatial_similarity, spatial_similarity
 torch.manual_seed(100)
 torch.cuda.manual_seed(100)
 os.environ['CUDA_VISIBLE_DEVICES']=str(args.gpu_id)
-device = torch.device('cpu' if args.cpu else 'cuda')   
+device = torch.device('cpu')   
     
     
 def load_teachers():
-    print("Loading Teacher ====================================>")
+    print(f"Loading Teacher ====================================> {args.teacher}")
     teachers = []
     
     if "EDSR" in args.teacher:
@@ -30,36 +30,38 @@ def load_teachers():
         net = edsr.EDSR(args).to(device)
         if int(args.scale[0]) == 2:
             print("loading EDSRx2")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/EDSR_BIX2.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/EDSR_BIX2.pt'))
         elif int(args.scale[0]) == 3:
             print("loading EDSRx3")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/EDSR_BIX3.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/EDSR_BIX3.pt'))
         elif int(args.scale[0]) == 4:
             print("loading EDSRx4")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/EDSR_BIX4.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/EDSR_BIX4.pt'))
         elif int(args.scale[0]) == 8:
             print("loading EDSRx8")
-            net.load_state_dict_student(torch.load('../teacher_checkpoint/EDSR_BIX8.pt'))
+            net.load_state_dict_student(torch.load('./teacher_checkpoint/EDSR_BIX8.pt'))
         if args.precision == 'half':
             net.half()
         teachers.append(net)
     
     if "RCAN" in args.teacher:
+        print(f"rcan : {args.teacher}")
         args.n_resblocks = 20
         args.n_resgroups = 10
         net = rcan.RCAN(args).to(device)
+        print(f"rcan : {args.teacher}")
         if int(args.scale[0]) == 2:
             print("loading RCANx2")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/RCAN_BIX2.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/RCAN_BIX2.pt'))
         elif int(args.scale[0]) == 3:
             print("loading RCANx3")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/RCAN_BIX3.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/RCAN_BIX3.pt'))
         elif int(args.scale[0]) == 4:
             print("loading RCANx4")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/RCAN_BIX4.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/RCAN_BIX4.pt', map_location=torch.device('cpu')))
         elif int(args.scale[0]) == 8:
             print("loading RCANx8")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/RCAN_BIX8.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/RCAN_BIX8.pt'))
         if args.precision == 'half':
             net.half()
         teachers.append(net)
@@ -71,16 +73,16 @@ def load_teachers():
         net = san.SAN(args).to(device)
         if int(args.scale[0]) == 2:
             print("loading SANx2")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/SAN_BIX2.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/SAN_BIX2.pt'))
         elif int(args.scale[0]) == 3:
             print("loading SANx3")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/SAN_BIX3.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/SAN_BIX3.pt'))
         elif int(args.scale[0]) == 4:
             print("loading SANx4")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/SAN_BIX4.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/SAN_BIX4.pt'))
         elif int(args.scale[0]) == 8:
             print("loading SANx8")
-            net.load_state_dict_teacher(torch.load('../teacher_checkpoint/SAN_BIX8.pt'))
+            net.load_state_dict_teacher(torch.load('./teacher_checkpoint/SAN_BIX8.pt'))
         if args.precision == 'half':
             net.half()
         teachers.append(net)
@@ -89,7 +91,7 @@ def load_teachers():
     for teacher in teachers:
         for p in teacher.parameters():
             p.requires_grad = False
-    
+    # print(teachers)
     return teachers
     
     
@@ -159,14 +161,15 @@ def train(epoch):
     )
     
     timer_data, timer_model = utility.timer(), utility.timer()
-    for batch, (lr, hr, _, idx_scale) in enumerate(train_loader):
-        
+    for batch, (lr, hr, _) in enumerate(train_loader):
         lr, hr = prepare(lr, hr)
+        
         timer_data.hold()
         timer_model.tic()
         
         optimizer.zero_grad()
         student_fms, student_sr = student(lr)
+        # print(f"train teachers len : {len(teachers)}")
         teacher = teacher_selector(teachers)
         teacher_fms, teacher_sr = teacher(lr)
 
@@ -343,19 +346,26 @@ def print_args():
     return msg
 
 
+# python code/train.py --ckp_dir student_baseline/rcan_baseline/baseline_x4 --scale 4 --teacher [RCAN] --model RCAN --alpha 0 --feature_loss_used 0 --gpu_id 0 --epochs 200 --save_results --chop --patch_size 192
+
 if __name__ == "__main__":
     msg = print_args()
+    print(msg)
 
     print("Preparing Data ====================================>")
+    # 加载数据
     loader = data.Data(args)
     train_loader = loader.loader_train
     test_loader = loader.loader_test
-
+    # 加载教师网络
     teachers = load_teachers()
+    # 创建学生网络
     student_ckp, student = create_student_model()
+    # 加载损失函数
     criterion = prepare_criterion()
+    # 加载优化器
     optimizer = prepare_optimizer()
-
+    # 写入日志
     student_ckp.write_log(msg)
 
     

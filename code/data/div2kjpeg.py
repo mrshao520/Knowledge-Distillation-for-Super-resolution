@@ -4,6 +4,7 @@ from data import div2k
 
 class DIV2KJPEG(div2k.DIV2K):
     def __init__(self, args, name='', train=True, benchmark=False):
+        print(name)
         self.q_factor = int(name.replace('DIV2K-Q', ''))
         super(DIV2KJPEG, self).__init__(
             args, name=name, train=train, benchmark=benchmark

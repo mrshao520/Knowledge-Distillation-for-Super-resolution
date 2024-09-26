@@ -49,7 +49,7 @@ class checkpoint():
         self.log = torch.Tensor() # 3-dimensional
         now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         
-        self.dir = os.path.join('..', 'experiment', args.ckp_dir)
+        self.dir = os.path.join('.', 'experiment', args.ckp_dir)
         if args.reset and os.path.exists(self.dir):
             os.system('rm -rf ' + self.dir)
         
@@ -267,8 +267,9 @@ def format_time(seconds):
         f = '0ms'
     return f
     
-_, term_width = os.popen('stty size', 'r').read().split()
-term_width = int(term_width)    
+# _, term_width = os.popen('stty size', 'r').read().split()
+# term_width = int(term_width)    
+term_width = 250
 
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
